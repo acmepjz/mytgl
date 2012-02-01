@@ -1,0 +1,50 @@
+syntax: TODO: #define=? #include=? #ignore=?
+
+<axiom>
+<rule>
+<rule>
+...
+
+rule:
+
+[...<]X[(...)][>...][:...][@...]=>...
+  |   |    |    |     |      |
+  2L  |    |    2L    |      |
+     symbol|      conditions |
+           |                 |
+      arguments list    probability
+
+arguments=single!!!
+
+probability:
+ sum<=1 => max=1
+ sum>1  => max=sum
+
+symbol: X or X_a ...
+
+////////////////////expression:
+const:
+_l = length
+_a = angle
+
+operator: + - * / ^ < > = &(and) |(or) !(not)
+
+p-code: stupid!!!
+00 xx push arg
+01 xx push const
+02    +
+03    -
+04    *
+05    /
+06    ^
+07    <
+08    >
+09    =
+0A    &(and)
+0B    |(or)
+0C    negative
+0D    !(not)
+FF    over (???)
+
+////////////////////simplest is:
+X[@...]=>...
