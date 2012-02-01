@@ -1,0 +1,519 @@
+//properties definition file
+//
+//case-insensitive
+//
+//1. "[" operatorIndex "]" name,[menu],[size],[stringCount],[hotkey?]
+//
+//2. type,name,[offset],[bitstart],[bitend],[default],[min],[max],[list]
+//
+//type:
+// basic:
+//  Byte,Boolean       1-byte
+//  Integer,Half       2-byte
+//  Long,Single        4-byte
+//  PointInt,PointHalf 4-byte
+//  Point,PointFloat   8-byte
+//  RectInt,RectHalf   8-byte
+//  Rect,RectFloat    16-byte
+// predefined:
+//  Color              4-byte (31-argb-0)
+//  Size               1-byte
+// null:
+//  String - offset=index
+//  Group - null
+//  Custom - null!!
+//default,min,max,list: separator=";"
+//
+//menus:
+//
+//3. ">" menuName
+// "-" = separator "|" = vertical separator "\" or "/" = path :-3
+// eg.
+// >Generator
+// >Generator\-
+// >-
+// >xxx ...
+
+////////////////////////////////////////
+//
+//  basic operators
+//
+////////////////////////////////////////
+
+
+[1]Flat,Generator,5
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Color
+Color,Color,1,,,&HFF000000
+
+[2]Cloud,Generator,13
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Color
+Color,Color 0,1,,,&HFF000000
+Color,Color 1,5,,,&HFFFFFFFF
+
+Group,Properties
+//Amp
+Byte,Random,9,,,128
+//Level
+Byte,Level,12,0,3,1,0,12
+Integer,Seed,10
+//new
+Byte,Resampling,12,4,4,1,0,1,Bilinear;Bicubic
+
+[3]Gradient,Generator,22
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Color
+Color,Color 0,1,,,&HFF000000
+Color,Color 1,5,,,&HFFFFFFFF
+
+Group,Properties
+Single,Position,9
+Single,Angle,13
+Single,Width,17,,,1
+Byte,Mode,21,0,1,0,0,2,linear;gaussian;sine
+
+//TODO:
+
+[4]Gradient2,Generator,17
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Color
+Color,A,1,,,&hFF0000FF
+Color,B,5,,,&hFF00FF00
+Color,C,9,,,&hFFFF0000
+Color,D,13,,,&hFF00FFFF
+
+[5]Cell,Generator,36
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Color
+Color,Color 0,1,,,&HFFFF0000
+Color,Color 1,5,,,&HFFFFFF00
+
+Group,Properties
+Byte,Max,9,,,255,1
+Float,Min Distance,10,,,0.125,0,1
+Integer,Seed,14
+Float,Amplify,16,,,1,0,16
+Float,Gamma,20,,,0.5,0,16
+Float,Aspect,24,,,0,-8,8
+Byte,Color mode,28,0,1,0,,,Outer;Inner;Cross
+Byte,Cell mode,28,2,3,0,,,Random;Grid;Chessboard
+Boolean,Cell color,28,6,6,0
+Boolean,Invert,28,7,7,0
+
+Group,Grid mode
+Byte,Regularity,34,,,128
+Byte,Density,35,,,8,1,255
+
+Group,Cell color mode
+Color,Color 2,29
+Byte,Percentage,33
+
+[6]Noise,Generator,11
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Color
+Color,Color 0,1,,,&HFF000000
+Color,Color 1,5,,,&HFFFFFFFF
+
+Group,Properties
+Integer,Seed,9
+
+[7]Brick,Generator,35
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Color
+Color,Color 0,1,,,&HFFFF0000
+Color,Color 1,5,,,&HFFFFFF00
+Color,Color Joints,9,,,&HFF000000
+
+Group,Properties
+PointFloat,Size Joints,13,,,0.18;0.28,0,1
+PointByte,Count,21,,,18;28,1,255
+Integer,Seed,23
+Boolean,Joints color,26,1,1,0
+Byte,Multiply,26,2,4,0,0,7,1;2;4;8;16;32;64;128
+Single,Side,27,,,0.25,0,2
+Single,Color balance,31,,,1,0,16
+
+Group,Single-Width Stones
+Byte,Amount,25,,,80
+Boolean,No adjacent,26,0,0,1
+
+[8]Perlin,Generator,25
+
+Group,Size
+Size,Width,0,0,3
+Size,Height,0,4,7
+
+Group,Properties
+Byte,Frequency,1,0,3,1,0,15
+Byte,Octaves,1,4,7,2,0,15
+Float,Fadeoff,3,,,1,-8,8
+Integer,Seed,7
+Byte,Mode,2,0,1,0,0,3,normal;abs;sin;abs+sin
+Float,Amplify,9,,,1,0,16
+Float,Gamma,13,,,1,0,16
+
+Group,Color
+Color,Color 0,17,,,&HFF000000
+Color,Color 1,21,,,&HFFFFFFFF
+
+//TODO:
+[9]Import,,1,1
+
+Size,New Width,0,0,3
+Size,New Height,0,4,7
+Custom,Picture,0
+
+>-
+
+////////////////////////////////////////
+//
+//  algorithmic
+//
+////////////////////////////////////////
+
+[13]IFSP,Fractals,7,1
+
+Long,Count,0,,,100000,0
+Integer,Seed,4
+Byte,Mode,6,0,1,,,,Normal;Blend;Mix
+Boolean, High quality ,6,7,7
+
+//Transform
+Custom,Transform,0
+
+[12]L-system,Fractals,24,2
+
+Group,Properties
+Boolean, Antialiasing ,0,0,0,1
+Integer, Seed ,1
+PointFloat, Position ,3,,,.5;1
+Single, Angle ,11,,,.75
+Byte, X Count ,0,2,4,1,1,7
+Byte, Y Count ,0,5,7,1,1,7
+Single, Delta-Angle,15,,, .125
+Single, Length , 19 ,,, .05
+Byte, Generations , 23
+Custom,Color Table,0
+String,L-system,1
+
+[11]SlowGrow,Fractals,42,0
+
+Group,Color
+Color,Color 0      ,8,,,-1
+Color,Color 1      ,12,,,-1
+
+Group,Inital Area
+Byte  ,      Mode     ,7,4,4, 0 ,,,Box;Ellipse
+PointFloat,  Center   ,16 ,,, 0;0
+PointFloat,  Radius   ,24 ,,, 0;0 ,0
+Byte,Angle,32,,,0
+Byte,Variation,33,,,255
+
+Group,Properties
+Long,Count,0,0,20,1000,0,2097151
+Long,Max Iteration,2,5,15,256,0,2047
+Byte,Variation ,6,,,32
+Integer,Seed,4
+PointFloat,Probability,34,,, 1;1
+Byte,   X Clamp  ,7,0,1, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp  ,7,2,3, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte, Mode            ,7,5,6, 0,,,Normal;Blend;Mix
+Boolean, High quality ,7,7,7, 1
+
+////////////////////////////////////////
+//
+//  add-item operators
+//
+////////////////////////////////////////
+
+[14]Rect,Drawing,21
+
+Group,Color
+Color,Color,0,,,&HFF808080
+Group,Properties
+RectFloat,Rect,4,,,.25;.25;.75;.75,0,1
+Byte,Mode,20,0,1,,,,Blend;Mix
+
+[15] Pixels,Drawing,15
+
+Group,Color
+Color,Color 0,0,,,&HFF000000
+Color,Color 1,4,,,&HFFFFFFFF
+Group,Properties
+Long,Count,8,,,16,0
+Integer,Seed,12
+Byte,Mode,14,0,1,,,,Normal;Blend;Mix
+
+[16] GlowRect,Drawing,37
+
+Group,Properties
+PointFloat,Center ,0,,,     .5;.5,0,1
+PointFloat,Radius ,8,,,   .25;.25,0,1
+PointFloat,Size   ,16,,,       0;0,0,1
+Color,Color       ,24,,,-1
+Single,Blend      ,28,,,        1,-1,1
+Single,Power      ,32,,,  0.5,0,16
+Boolean,Wrap        ,36,0,0
+Byte   ,Power Mode  ,36,1,1,0,0,1,Normal;Alternative
+
+[17] Crack,Drawing,15
+
+Group,Color
+Color,Color 0      ,0,,,-1
+Color,Color 1      ,4,,,-1
+Byte,ColorVariation,14,,,0
+
+Group,Properties
+Byte,Count     ,8,,,100
+Byte,Variation ,9,,,32
+Byte,Length   ,10,,,255
+Integer,Seed,11
+Byte, Length decision ,13,0,1, 0,,,Random;Constant;Normal based
+Byte, Mode            ,13,2,3, 0,,,Normal;Blend;Mix
+Boolean, High quality ,13,7,7, 1
+
+[18] Crater,Drawing,10
+
+Group,Properties
+Long,Count,0,,,100,0
+Integer,Seed,4
+Single,Radius,6,,,.1,0,1
+
+////////////////////////////////////////
+//
+//  filter operators
+//
+////////////////////////////////////////
+
+[20]Blur,Filter,13
+
+Group,Properties
+PointFloat, Blur , 0   , , , .015;.015 , 0, 1
+Single, Amplify  , 8   , , , 1         , 0, 16
+Byte  , Passes   , 12  ,0,2, 2         , 0, 7
+Byte,   X Clamp  ,12,3,4, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp  ,12,5,6, 1, 0, 3,Off;Wrap;Clamp;Mirror
+
+[21]Color,Filter,5
+Byte  , Mode     , 0 ,,,,,,Add Clamp;Add Wrap;Sub Clamp;Sub Wrap;Multiply;Difference;Min;Max;Grayscale;Invert;Scale;Pre-Multiply
+Color , Color    , 1
+
+[22]Range,Filter,11
+Group,Properties
+Byte  , Mode   ,0,0,0,,,,Adjust Channel;Grayscale
+Boolean,Invert ,0,1,1
+Byte  , Start  ,9,,,0
+Byte  , End    ,10,,,255
+Group,Color
+Color,Color 0     ,1,,,&hFF000000
+Color,Color 1     ,5,,,-1
+
+[23]HSCB,Filter,16
+Group,Properties
+Single, Hue       ,0  ,,, 0, 0 , 1
+Single, Saturation,4  ,,, 1, 0 , 16
+Single, Contrast  ,8  ,,, 1, 0 , 16
+Single, Brightness,12 ,,, 1, 0 , 64
+
+[24]Normals,Normals,5
+Single, Strength,0,,,1,0,16
+Byte,   Mode    ,4,,,1,,,2D;3D;Tangent 2D;Tangent 3D
+
+[25]ColorBalance,Filter,12
+Color,Shadows,0,,,&HFF808080
+Color,Midtones,4,,,&HFF808080
+Color,Highlights,8,,,&HFF808080
+
+[26]RotZoom,Transform,26,0
+//New
+Group,Resize
+ChangeSize,New Width,25,0,3
+ChangeSize,New Height,25,4,7
+//
+Group,Transform
+Single     , Angle    , 0  ,,, 0
+PointFloat , Zoom     , 4  ,,, 1;1
+PointFloat , Scroll   , 12 ,,, .5;.5
+Single     , Skew     , 20 ,,, 0
+Group,Properties
+Byte,   X Clamp   ,24,0,1, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp   ,24,2,3, 1, 0, 3,Off;Wrap;Clamp;Mirror
+
+[27]RotateMul,Transform,34,0
+Group,Transform
+Single     , Angle    , 0  ,,, 0
+PointFloat , Zoom     , 4  ,,, 1;1
+PointFloat , Scroll   , 12 ,,, .5;.5
+Single     , Skew     , 20 ,,, 0
+Group,Properties
+Byte,   X Clamp   ,24,0,1, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp   ,24,2,3, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Color, Pre-Adjust ,25,,,-1
+Byte  , Mode     , 24,4,7,  ,,,Add Clamp;Add Wrap;Sub Clamp;Sub Wrap;Multiply;Difference;Alpha;Over;Add Smooth;Min;Max
+Byte  , Source Mode,29,7,7, ,,,Linear;Recursive
+Byte  , Count    , 29,0,6, 2,1,100
+Color,  Fade      ,30,,,-1
+
+[28]Sharpen,Filter,13,0
+Group,Properties
+Byte,       Passes , 0 ,0,2, 2 , 0 , 7
+PointFloat, Radius , 1 ,,, .005;.005 , 0, 1
+Single, Amplify    , 9 ,,, 1         , -8, 8
+Byte,   X Clamp  ,0,3,4, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp  ,0,5,6, 1, 0, 3,Off;Wrap;Clamp;Mirror
+
+[29]Dialect,Filter,3,0
+Byte, Passes   ,0,,,10
+Byte,Percentage,1,,,255
+Byte,Mode    ,2,0,1, ,,,Max;Min;Mid
+
+////////////////////////////////////////
+//
+//  combine operators
+//
+////////////////////////////////////////
+
+[34]Distort,Combine,5,0
+
+Group,Properties
+Single, Strength    ,0,,,0.02, -4, 4
+Byte,   X Clamp   ,4,0,1, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp   ,4,2,3, 1, 0, 3,Off;Wrap;Clamp;Mirror
+
+[35]Bump,Combine,53,0
+
+Group,Properties
+
+Byte, Mode ,0,,,2,,,Spot;Point;Directional
+Single, X Pos , 1 ,,, 0.5 , -16 , 16
+Single, Y Pos , 5 ,,, 0.5 , -16 , 16
+Single, Z Pos , 9 ,,, 0.5 , -16 , 16
+PointFloat,Direction,13,,,0.125;1,-4,4
+Color , Diffuse , 21 ,,, -1
+Color , Ambient , 25 ,,, -1
+Single, Outer , 29 ,,, 0.75 , 0 , 4
+Single, Falloff , 33 ,,, 1 , 0 , 4
+Single, Amplify , 37 ,,, 0.5 , -4 , 4
+
+Group,Specular
+Color , Specular , 41 ,,, -1
+Single,Power,45,,,16,0,256
+Single, Amplify , 49 ,,, 1 , 0 , 4
+
+
+[36]Add,Combine,17,0
+
+Group,Properties
+Byte,Mode,0,,,,,,Add Clamp;Add Wrap;Sub Clamp;Sub Wrap;Multiply;Difference;Alpha;Brightness;Over;Add Smooth;Min;Max
+//max???
+RectFloat,Color Percent,1,,,1;1;1;1,-16,16
+
+[37]Mask,Combine,1,0
+Byte,Mode,0,,,,,,Mix;Add;Sub;Multiply;Dissolve
+
+[38]Particle,Combine,39,0
+Group,Properties
+Byte,    Count        , 0 ,,, 32
+Byte  ,      Mode     ,7,0,3, 0 ,,,Add Clamp;Add Wrap;Sub Clamp;Sub Wrap;Multiply;Difference;Over;Add Smooth;Min;Max
+Integer,Seed,20
+
+Group,Area
+//Gaussian??
+Byte  ,      Mode     ,7,4,6, 0 ,,,Box;Ellipse;Gaussian
+PointFloat,  Center   ,22 ,,, .5;.5
+PointFloat,  Radius   ,30 ,,, .5;.5 ,0
+
+Group,Transform
+Single , Size         , 1 ,,, .125 , 0
+Byte ,Size Variation  , 5 ,,, 128
+Byte ,Spin Variation  , 6 ,,, 255
+
+Group,Color
+Color,  Color 0       , 8 ,,, &HFF000000
+Color,  Color 1       ,12 ,,, &HFFFFFFFF
+Single, Color balance ,16 ,,, 1 , 0 , 16
+
+Group,Multi-Particle
+Boolean ,Mix Particle ,7,7,7,1
+Byte    , Percentage  ,38,,,128
+
+[39]Segment,,1,0
+Byte,   Threshold     , 0 ,,, 128
+
+[40]Bulge,,21,0
+
+Single,Warp,0,,,1,-16,16
+PointFloat,  Radius   ,4 ,,, .5;.5 ,0
+PointFloat,  Center   ,12 ,,,  .5;.5
+Byte,   X Clamp ,20 ,0,1, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp ,20 ,2,3, 1, 0, 3,Off;Wrap;Clamp;Mirror
+
+[41]Twirl,,25,0
+
+Group,Properties
+Single,Strength,0,,,.5
+Single,Gamma,   4,,, 2 , 0,64
+PointFloat,  Radius   ,8 ,,, .25;.25 ,0
+PointFloat,  Center   ,16 ,,,  .5;.5
+Byte,   X Clamp ,24 ,0,1, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp ,24 ,2,3, 1, 0, 3,Off;Wrap;Clamp;Mirror
+
+[42]Unwrap,,1,0
+
+Group,Properties
+Byte,Mode,0,4,7,,,,polar->normal;normal->polar;rect->normal
+Byte,   X Clamp ,0 ,0,1, 1, 0, 3,Off;Wrap;Clamp;Mirror
+Byte,   Y Clamp ,0 ,2,3, 1, 0, 3,Off;Wrap;Clamp;Mirror
+
+[43]Abnormals,Normals,18,0
+
+Group,Properties
+RectFloat, Rotation ,0,,, 0;0;0;1
+Byte, Sensitivity , 16 ,,, 128
+Byte, Compensation , 17 ,0,1, ,,, Normal;Height;Quaternion
+Byte, Mirror       , 17 ,2,3, ,,, None;X : YZ;Y : XZ;X+Y : Z
+
+////////////////////////////////////////
+//
+//  Psuedo-Operator
+//  WARNING: DON'T MODIFY!!!
+//
+////////////////////////////////////////
+
+>-
+
+[251]Load,,0,1
+String,Load,0
+[252]Store,,0,0
+[253]Nop,,0,0
+[254]Export,,0,1
+String,Texture Name,0
