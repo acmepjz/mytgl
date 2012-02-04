@@ -253,17 +253,26 @@ For k = 1 To objDAG.SortedNodeCount
    For ii = 1 To objDAG.DegreeIn(i)
     j = objDAG.InputNode(i, ii)
     If nOldIndex(j) > 0 Then j = nOldIndex(j)
-    nLastOccurence(j) = m
+    If nLastOccurence(j) >= 0 Then nLastOccurence(j) = m
    Next ii
    '///
   End Select
  End If
 Next k
+'///preserve the export operator
+For i = 0 To List1.ListCount - 1
+ If List1.Selected(i) Then
+  j = List1.ItemData(i)
+  If nOldIndex(j) > 0 Then j = nOldIndex(j)
+  nLastOccurence(j) = -1
+ End If
+Next i
 '///get the remove order
 ReDim nSort(1 To tPrj.nOpCount)
 For k = 1 To m
  i = nOrder(k)
- nSort(k) = (nLastOccurence(i) * &H10000) Or i
+ j = nLastOccurence(i)
+ If j >= 0 Then nSort(k) = (j * &H10000) Or i
 Next k
 With New ISort2
  .QuickSort nSort, 1, m
