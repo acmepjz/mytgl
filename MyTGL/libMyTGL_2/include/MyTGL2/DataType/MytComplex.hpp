@@ -112,7 +112,8 @@ namespace Myt{
 			return c;
 		}
 
-		inline friend Complex operator*(const Complex& obj1,const Complex& obj2){
+		template<class T2>
+		inline friend Complex operator*(const Complex& obj1,const Complex<T2>& obj2){
 			Complex c={obj1.Re*obj2.Re-obj1.Im*obj2.Im,obj1.Re*obj2.Im+obj1.Im*obj2.Re};
 			return c;
 		}
@@ -127,7 +128,8 @@ namespace Myt{
 			return c;
 		}
 
-		inline friend Complex operator/(const Complex& obj1,const Complex& obj2){
+		template<class T2>
+		inline friend Complex operator/(const Complex& obj1,const Complex<T2>& obj2){
 			T tmp=obj2.Re*obj2.Re+obj2.Im*obj2.Im;
 			Complex c={(obj1.Re*obj2.Re+obj1.Im*obj2.Im)/tmp,(obj1.Im*obj2.Re-obj1.Re*obj2.Im)/tmp};
 			return c;
@@ -146,6 +148,12 @@ namespace Myt{
 
 		inline Complex operator-() const{
 			Complex c={-Re,-Im};
+			return c;
+		}
+
+		//conjugate
+		inline Complex operator!() const{
+			Complex c={Re,-Im};
 			return c;
 		}
 	};

@@ -12,6 +12,9 @@ namespace Myt{
 		static inline T One(){
 			return 1;
 		}
+		static inline T Clamp(const T& Value,const T& Min,const T& Max){
+			return Value<Min?Min:(Value>Max?Max:Value);
+		}
 	};
 }
 

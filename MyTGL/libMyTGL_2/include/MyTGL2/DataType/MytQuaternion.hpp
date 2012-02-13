@@ -174,6 +174,12 @@ namespace Myt{
 			Quaternion c={-Data[0],-Data[1],-Data[2],-Data[3]};
 			return c;
 		}
+
+		//conjugate
+		inline Quaternion operator!() const{
+			Quaternion c={Data[0],-Data[1],-Data[2],-Data[3]};
+			return c;
+		}
 	};
 
 	template<class T>
