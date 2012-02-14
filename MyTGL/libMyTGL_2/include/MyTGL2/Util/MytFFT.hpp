@@ -49,25 +49,18 @@ namespace Myt{
 	class FFT{
 	public:
 		static void Calc(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
-			Shuffle(Src,Dest,N);
+			if(Src==Dest) Shuffle(Dest,N);
+			else Shuffle(Src,Dest,N);
 			CalcInternalAndPostProcess(Dest,N,Inverse,Normalize);
 		}
-		static void Calc(Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
-			Shuffle(Dest,N);
-			CalcInternalAndPostProcess(Dest,N,Inverse,Normalize);
-		}
-		static void Calc(const Complex<T>* Src,Complex<T>* Dest,bool Inverse,bool Normalize,const FFTShuffleProvider& obj){
+		static void Calc(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj,bool Inverse,bool Normalize){
 			const unsigned int N=obj.N;
-			Shuffle(Src,Dest,N,obj);
-			CalcInternalAndPostProcess(Dest,N,Inverse,Normalize);
-		}
-		static void Calc(Complex<T>* Dest,bool Inverse,bool Normalize,const FFTShuffleProvider& obj){
-			const unsigned int N=obj.N;
-			Shuffle(Dest,N,obj);
+			if(Src==Dest) Shuffle(Dest,N,obj);
+			else Shuffle(Src,Dest,N,obj);
 			CalcInternalAndPostProcess(Dest,N,Inverse,Normalize);
 		}
 	private:
-		static inline void CalcInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
+		static void CalcInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
 			CalcInternal(Dest,N,Inverse);
 			if(Normalize){
 				T_float f=T_float(1.0)/sqrt(T_float(N));
@@ -195,32 +188,38 @@ namespace Myt{
 		}
 	public:
 		//N must be even, power-of-two
-		static void CalcReal(const T* Src,Complex<T>* Dest,unsigned int N,bool Normalize){
-			Shuffle((const Complex<T>*)Src,Dest,N>>1);
-			CalcRealInternalAndPostProcess(Dest,N>>1,Normalize);
-		}
-		//N must be even, power-of-two
-		static void CalcReal(T* Dest,unsigned int N,bool Normalize){
-			Shuffle((Complex<T>*)Dest,N>>1);
-			CalcRealInternalAndPostProcess((Complex<T>*)Dest,N>>1,Normalize);
-		}
-		//real data size should be 2*obj.N
-		static void CalcReal(const T* Src,Complex<T>* Dest,bool Normalize,const FFTShuffleProvider& obj){
-			Shuffle((const Complex<T>*)Src,Dest,obj.N,obj);
-			CalcRealInternalAndPostProcess(Dest,obj.N,Normalize);
+		//output size is N/2 complex number, Dest[N/2].Re is put in Dest[0].Im
+		static void CalcReal(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
+			if(Inverse){
+				CalcRealInversePreProcess(Src,Dest,N>>1);
+				Shuffle(Dest,N>>1);
+				CalcRealInverseInternalAndPostProcess(Dest,N>>1,Normalize);
+			}else{
+				if(Src==Dest) Shuffle(Dest,N>>1);
+				else Shuffle(Src,Dest,N>>1);
+				CalcRealInternalAndPostProcess(Dest,N>>1,Normalize);
+			}
 		}
 		//real data size should be 2*obj.N
-		static void CalcReal(T* Dest,bool Normalize,const FFTShuffleProvider& obj){
-			Shuffle((Complex<T>*)Dest,obj.N,obj);
-			CalcRealInternalAndPostProcess((Complex<T>*)Dest,obj.N,Normalize);
+		//output size is obj.N complex number, Dest[obj.N].Re is put in Dest[0].Im
+		static void CalcReal(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj,bool Inverse,bool Normalize){
+			if(Inverse){
+				CalcRealInversePreProcess(Src,Dest,obj.N);
+				Shuffle(Dest,obj.N,obj);
+				CalcRealInverseInternalAndPostProcess(Dest,obj.N,Normalize);
+			}else{
+				if(Src==Dest) Shuffle(Dest,obj.N,obj);
+				else Shuffle(Src,Dest,obj.N,obj);
+				CalcRealInternalAndPostProcess(Dest,obj.N,Normalize);
+			}
 		}
 	private:
-		static inline void CalcRealInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Normalize){
+		static void CalcRealInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Normalize){
 			CalcInternal(Dest,N,false);
 			//post process
 			Dest[0]=Complex<T>::Make(
 				Dest[0].Re+Dest[0].Im, //Dest[0]
-				Dest[0].Re-Dest[0].Im  //Dest[N>>1]
+				Dest[0].Re-Dest[0].Im  //Dest[N]
 				);
 
 			const T_float pi=T_float(-3.14159265358979323846);
@@ -231,19 +230,55 @@ namespace Myt{
 			for(unsigned int k=1;k<=(N>>1);k++){
 				Factor*=Multiplier;
 
-				Complex<T> tmp[1];
+				Complex<T> tmp[2];
 				tmp[0]=!Dest[N-k];
 
-				tmp[1]=Dest[k]+tmp[0];
-				tmp[0]=(Dest[k]-tmp[0])*Factor;
+				tmp[1]=(Dest[k]-tmp[0])*Factor;
+				tmp[0]+=Dest[k];
 
-				Dest[k]=(tmp[1]+tmp[0])*T_float(0.5);
-				Dest[N-k].Re=(tmp[1].Re-tmp[0].Re)*T_float(0.5);
-				Dest[N-k].Im=(tmp[0].Im-tmp[1].Im)*T_float(0.5);
+				Dest[k]=(tmp[0]+tmp[1])*T_float(0.5);
+				Dest[N-k]=Complex<T>::Make(
+					(tmp[0].Re-tmp[1].Re)*T_float(0.5),
+					(tmp[1].Im-tmp[0].Im)*T_float(0.5));
 			}
 			//over
 			if(Normalize){
 				T_float f=T_float(1.0)/sqrt(T_float(N<<1));
+				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
+			}
+		}
+		static void CalcRealInversePreProcess(const Complex<T>* Src,Complex<T>* Dest,unsigned int N){
+			Dest[0]=Complex<T>::Make(
+				Src[0].Re+Src[0].Im,
+				Src[0].Re-Src[0].Im);
+
+			const T_float pi=T_float(3.14159265358979323846);
+			const T_float delta=pi/T_float(N);
+			const Complex<T_float> Multiplier={cos(delta),sin(delta)};
+			Complex<T_float> Factor={0,1};
+
+			for(unsigned int k=1;k<=(N>>1);k++){
+				Factor*=Multiplier;
+
+				Complex<T> tmp[2];
+				tmp[0]=!Src[N-k];
+
+				tmp[1]=(Src[k]-tmp[0])*Factor;
+				tmp[0]+=Src[k];
+
+				Dest[k]=tmp[0]+tmp[1];
+				Dest[N-k]=Complex<T>::Make(
+					tmp[0].Re-tmp[1].Re,
+					tmp[1].Im-tmp[0].Im);
+			}
+		}
+		static void CalcRealInverseInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Normalize){
+			CalcInternal(Dest,N,true);
+			if(Normalize){
+				T_float f=T_float(1.0)/sqrt(T_float(N<<1));
+				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
+			}else{
+				T_float f=T_float(1.0)/T_float(N<<1);
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
 			}
 		}
@@ -254,9 +289,16 @@ namespace Myt{
 			for(unsigned int d=0;d<Dimension;d++) N<<=obj[d].Shift;
 			//calc d=0
 			unsigned int Step=obj[0].N,BlockSizeShift=obj[0].Shift;
-			for(unsigned int i=0;i<N;i+=Step){
-				Shuffle(Src+i,Dest+i,Step,obj[0]);
-				CalcInternal(Dest+i,Step,Inverse);
+			if(Src==Dest){
+				for(unsigned int i=0;i<N;i+=Step){
+					Shuffle(Dest+i,Step,obj[0]);
+					CalcInternal(Dest+i,Step,Inverse);
+				}
+			}else{
+				for(unsigned int i=0;i<N;i+=Step){
+					Shuffle(Src+i,Dest+i,Step,obj[0]);
+					CalcInternal(Dest+i,Step,Inverse);
+				}
 			}
 			//calc others
 			for(unsigned int d=1;d<Dimension;d++){
@@ -374,6 +416,159 @@ namespace Myt{
 						}
 						Factor*=Multiplier;
 					}
+				}
+			}
+		}
+	public:
+		//obj[Dimension-1] must be even
+		//real data size: obj[0].N * ... * (obj[Dimension-1].N*2)
+		//complex data size: obj[0].N * ... * (obj[Dimension-1].N+1)
+		//if Dimension>1 && Inverse==true then the output real data size should be
+		//as large as complex data, in order to hold temp data
+		static void CalcNDReal(const Complex<T>* Src,Complex<T>* Dest,unsigned int Dimension,const FFTShuffleProvider* obj,bool Inverse,bool Normalize){
+			//calc size
+			unsigned int S0=0;
+			for(unsigned int d=0;d<Dimension-1;d++) S0+=obj[d].Shift;
+
+			unsigned int N=((1UL<<S0)<<obj[Dimension-1].Shift)<<1; //real data size
+			unsigned int N1=((1UL<<S0)<<obj[Dimension-1].Shift)+(1UL<<S0); //complex data size
+			//calc d=Dimension-1 (forward)
+			if(!Inverse){
+				if(Dimension>1){
+					if(Src==Dest) ShuffleNDRealInplace(Dest,Dest+(N>>1),obj[Dimension-1].N,S0);
+					else ShuffleNDReal(Src,Dest,obj[Dimension-1].N,S0);
+				}
+				ShuffleEx(Dest,obj[Dimension-1].N,obj[Dimension-1],S0);
+				CalcInternalEx(Dest,obj[Dimension-1].N,Inverse,S0);
+				CalcRealPostProcessEx(Dest,obj[Dimension-1].N,S0);
+			}
+			if(Dimension>1){
+				//calc d=0
+				unsigned int Step=obj[0].N,BlockSizeShift=obj[0].Shift;
+				if(Inverse && Src!=Dest){
+					for(unsigned int i=0;i<N1;i+=Step){
+						Shuffle(Src+i,Dest+i,Step,obj[0]);
+						CalcInternal(Dest+i,Step,Inverse);
+					}
+				}else{
+					for(unsigned int i=0;i<N1;i+=Step){
+						Shuffle(Dest+i,Step,obj[0]);
+						CalcInternal(Dest+i,Step,Inverse);
+					}
+				}
+				//calc others
+				for(unsigned int d=1;d<Dimension-1;d++){
+					Step<<=obj[d].Shift;
+					for(unsigned int i=0;i<N1;i+=Step){
+						ShuffleEx(Dest+i,obj[d].N,obj[d],BlockSizeShift);
+						CalcInternalEx(Dest+i,obj[d].N,Inverse,BlockSizeShift);
+					}
+					BlockSizeShift+=obj[d].Shift;
+				}
+			}
+			//calc d=Dimension-1 (inverse)
+			if(Inverse){
+				CalcRealInversePreProcessEx(Dimension>1?Dest:Src,Dest,obj[Dimension-1].N,S0);
+				ShuffleEx(Dest,obj[Dimension-1].N,obj[Dimension-1],S0);
+				CalcInternalEx(Dest,obj[Dimension-1].N,Inverse,S0);
+				if(Dimension>1) ShuffleNDRealInverseInplace(Dest,Dest+(N>>1),obj[Dimension-1].N,S0);
+			}
+			//over
+			if(Normalize){
+				T_float f=T_float(1.0)/sqrt(T_float(N));
+				for(unsigned int i=0;i<(Inverse?(N>>1):N1);i++) Dest[i]*=f;
+			}else if(Inverse){
+				T_float f=T_float(1.0)/T_float(N);
+				for(unsigned int i=0;i<(N>>1);i++) Dest[i]*=f;
+			}
+		}
+	private:
+		static void CalcRealPostProcessEx(Complex<T>* Dest,unsigned int N,unsigned int BlockSizeShift){
+			for(unsigned int idx=0;idx<(1UL<<BlockSizeShift);idx++){
+				Dest[(N<<BlockSizeShift)+idx]=Complex<T>::Make(Dest[idx].Re-Dest[idx].Im,Functions<T>::Zero());
+				Dest[idx]=Complex<T>::Make(Dest[idx].Re+Dest[idx].Im,Functions<T>::Zero());
+			}
+
+			const T_float pi=T_float(-3.14159265358979323846);
+			const T_float delta=pi/T_float(N);
+			const Complex<T_float> Multiplier={cos(delta),sin(delta)};
+			Complex<T_float> Factor={0,-1};
+
+			for(unsigned int k=1;k<=(N>>1);k++){
+				Factor*=Multiplier;
+
+				for(unsigned int idx=0;idx<(1UL<<BlockSizeShift);idx++){
+					Complex<T> tmp[2];
+					tmp[0]=!Dest[((N-k)<<BlockSizeShift)+idx];
+
+					tmp[1]=(Dest[(k<<BlockSizeShift)+idx]-tmp[0])*Factor;
+					tmp[0]+=Dest[(k<<BlockSizeShift)+idx];
+
+					Dest[(k<<BlockSizeShift)+idx]=(tmp[0]+tmp[1])*T_float(0.5);
+					Dest[((N-k)<<BlockSizeShift)+idx]=Complex<T>::Make(
+						(tmp[0].Re-tmp[1].Re)*T_float(0.5),
+						(tmp[1].Im-tmp[0].Im)*T_float(0.5));
+				}
+			}
+		}
+		static void CalcRealInversePreProcessEx(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,unsigned int BlockSizeShift){
+			for(unsigned int idx=0;idx<(1UL<<BlockSizeShift);idx++){
+				Dest[idx]=Complex<T>::Make(
+					Src[idx].Re+Src[(N<<BlockSizeShift)+idx].Re,
+					Src[idx].Re-Src[(N<<BlockSizeShift)+idx].Re);
+			}
+
+			const T_float pi=T_float(3.14159265358979323846);
+			const T_float delta=pi/T_float(N);
+			const Complex<T_float> Multiplier={cos(delta),sin(delta)};
+			Complex<T_float> Factor={0,1};
+
+			for(unsigned int k=1;k<=(N>>1);k++){
+				Factor*=Multiplier;
+
+				for(unsigned int idx=0;idx<(1UL<<BlockSizeShift);idx++){
+					Complex<T> tmp[2];
+					tmp[0]=!Src[((N-k)<<BlockSizeShift)+idx];
+
+					tmp[1]=(Src[(k<<BlockSizeShift)+idx]-tmp[0])*Factor;
+					tmp[0]+=Src[(k<<BlockSizeShift)+idx];
+
+					Dest[(k<<BlockSizeShift)+idx]=tmp[0]+tmp[1];
+					Dest[((N-k)<<BlockSizeShift)+idx]=Complex<T>::Make(
+						tmp[0].Re-tmp[1].Re,
+						tmp[1].Im-tmp[0].Im);
+				}
+			}
+		}
+		static void ShuffleNDReal(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,unsigned int BlockSizeShift){
+			for(unsigned int i=0;i<N;i++){
+				const T* Src1=(const T*)(Src+(i<<BlockSizeShift));
+				T* Dest1=(T*)(Dest+(i<<BlockSizeShift));
+				for(unsigned int p=0;p<(1UL<<BlockSizeShift);p++){
+					Dest1[p<<1]=Src1[p];
+					Dest1[(p<<1)+1]=Src1[p+(1UL<<BlockSizeShift)];
+				}
+			}
+		}
+		static void ShuffleNDRealInplace(Complex<T>* Dest,Complex<T>* Temp,unsigned int N,unsigned int BlockSizeShift){
+			for(unsigned int i=0;i<N;i++){
+				T* Src1=(T*)Temp;
+				T* Dest1=(T*)(Dest+(i<<BlockSizeShift));
+				for(unsigned int p=0;p<(2UL<<BlockSizeShift);p++) Src1[p]=Dest1[p];
+				for(unsigned int p=0;p<(1UL<<BlockSizeShift);p++){
+					Dest1[p<<1]=Src1[p];
+					Dest1[(p<<1)+1]=Src1[p+(1UL<<BlockSizeShift)];
+				}
+			}
+		}
+		static void ShuffleNDRealInverseInplace(Complex<T>* Dest,Complex<T>* Temp,unsigned int N,unsigned int BlockSizeShift){
+			for(unsigned int i=0;i<N;i++){
+				T* Src1=(T*)Temp;
+				T* Dest1=(T*)(Dest+(i<<BlockSizeShift));
+				for(unsigned int p=0;p<(2UL<<BlockSizeShift);p++) Src1[p]=Dest1[p];
+				for(unsigned int p=0;p<(1UL<<BlockSizeShift);p++){
+					Dest1[p]=Src1[p<<1];
+					Dest1[p+(1UL<<BlockSizeShift)]=Src1[(p<<1)+1];
 				}
 			}
 		}
