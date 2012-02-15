@@ -2,6 +2,7 @@
 #define MYTCOMPLEX_HPP
 
 #include "MyTGL2/Util/MytFunctions.hpp"
+#include "MyTGL2/DataType/MytVector.hpp"
 #include <math.h>
 
 namespace Myt{
@@ -19,12 +20,12 @@ namespace Myt{
 		}
 
 		static inline Complex One(){
-			Complex c={Functions<T>::One()};
+			Complex c={Constants<T>::One()};
 			return c;
 		}
 
 		static inline Complex I(){
-			Complex c={Functions<T>::Zero(),Functions<T>::One()};
+			Complex c={Constants<T>::Zero(),Constants<T>::One()};
 			return c;
 		}
 
@@ -159,16 +160,38 @@ namespace Myt{
 	};
 
 	template<class T>
-	struct Functions<Complex<T> >{
+	struct Constants<Complex<T> >{
 		static inline Complex<T> Zero(){
 			Complex<T> c={};
 			return c;
 		}
 		static inline Complex<T> One(){
-			Complex<T> c={Functions<T>::One()};
+			Complex<T> c={Constants<T>::One()};
 			return c;
 		}
 	};
+
+	template<class T>
+	struct Random<Complex<T> >{
+		template<class T_RndProvider>
+		static inline Complex<T> Rnd(T_RndProvider &rnd){
+			Complex<T> c={Random<T>::Rnd(rnd),Random<T>::Rnd(rnd)};
+			return c;
+		}
+	};
+
+	typedef Complex<float> Complex32F;
+	typedef Complex<double> Complex64F;
+
+	typedef Complex<Vector32FC1> Complex32FC1;
+	typedef Complex<Vector32FC2> Complex32FC2;
+	typedef Complex<Vector32FC3> Complex32FC3;
+	typedef Complex<Vector32FC4> Complex32FC4;
+
+	typedef Complex<Vector64FC1> Complex64FC1;
+	typedef Complex<Vector64FC2> Complex64FC2;
+	typedef Complex<Vector64FC3> Complex64FC3;
+	typedef Complex<Vector64FC4> Complex64FC4;
 }
 
 #endif

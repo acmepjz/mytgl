@@ -3,6 +3,7 @@
 
 #include "MyTGL2/Util/MytMemoryManagement.hpp"
 #include "MyTGL2/Util/MytFunctions.hpp"
+#include "MyTGL2/DataType/MytVector.hpp"
 #include "MyTGL2/DataType/MytComplex.hpp"
 #include <math.h>
 
@@ -48,24 +49,24 @@ namespace Myt{
 	template<class T,class T_float>
 	class FFT{
 	public:
-		static void Calc(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
+		static void Calc(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,bool Inverse,int Normalize){
 			if(Src==Dest) Shuffle(Dest,N);
 			else Shuffle(Src,Dest,N);
 			CalcInternalAndPostProcess(Dest,N,Inverse,Normalize);
 		}
-		static void Calc(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj,bool Inverse,bool Normalize){
+		static void Calc(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj,bool Inverse,int Normalize){
 			const unsigned int N=obj.N;
 			if(Src==Dest) Shuffle(Dest,N,obj);
 			else Shuffle(Src,Dest,N,obj);
 			CalcInternalAndPostProcess(Dest,N,Inverse,Normalize);
 		}
 	private:
-		static void CalcInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
+		static inline void CalcInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Inverse,int Normalize){
 			CalcInternal(Dest,N,Inverse);
-			if(Normalize){
+			if(Normalize==1){
 				T_float f=T_float(1.0)/sqrt(T_float(N));
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
-			}else if(Inverse){
+			}else if(Inverse && Normalize==0){
 				T_float f=T_float(1.0)/T_float(N);
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
 			}
@@ -189,7 +190,7 @@ namespace Myt{
 	public:
 		//N must be even, power-of-two
 		//output size is N/2 complex number, Dest[N/2].Re is put in Dest[0].Im
-		static void CalcReal(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,bool Inverse,bool Normalize){
+		static void CalcReal(const Complex<T>* Src,Complex<T>* Dest,unsigned int N,bool Inverse,int Normalize){
 			if(Inverse){
 				CalcRealInversePreProcess(Src,Dest,N>>1);
 				Shuffle(Dest,N>>1);
@@ -202,7 +203,7 @@ namespace Myt{
 		}
 		//real data size should be 2*obj.N
 		//output size is obj.N complex number, Dest[obj.N].Re is put in Dest[0].Im
-		static void CalcReal(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj,bool Inverse,bool Normalize){
+		static void CalcReal(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj,bool Inverse,int Normalize){
 			if(Inverse){
 				CalcRealInversePreProcess(Src,Dest,obj.N);
 				Shuffle(Dest,obj.N,obj);
@@ -214,7 +215,7 @@ namespace Myt{
 			}
 		}
 	private:
-		static void CalcRealInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Normalize){
+		static void CalcRealInternalAndPostProcess(Complex<T>* Dest,unsigned int N,int Normalize){
 			CalcInternal(Dest,N,false);
 			//post process
 			Dest[0]=Complex<T>::Make(
@@ -242,7 +243,7 @@ namespace Myt{
 					(tmp[1].Im-tmp[0].Im)*T_float(0.5));
 			}
 			//over
-			if(Normalize){
+			if(Normalize==1){
 				T_float f=T_float(1.0)/sqrt(T_float(N<<1));
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
 			}
@@ -272,18 +273,18 @@ namespace Myt{
 					tmp[1].Im-tmp[0].Im);
 			}
 		}
-		static void CalcRealInverseInternalAndPostProcess(Complex<T>* Dest,unsigned int N,bool Normalize){
+		static inline void CalcRealInverseInternalAndPostProcess(Complex<T>* Dest,unsigned int N,int Normalize){
 			CalcInternal(Dest,N,true);
-			if(Normalize){
+			if(Normalize==1){
 				T_float f=T_float(1.0)/sqrt(T_float(N<<1));
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
-			}else{
+			}else if(Normalize==0){
 				T_float f=T_float(1.0)/T_float(N<<1);
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
 			}
 		}
 	public:
-		static void CalcND(const Complex<T>* Src,Complex<T>* Dest,unsigned int Dimension,const FFTShuffleProvider* obj,bool Inverse,bool Normalize){
+		static void CalcND(const Complex<T>* Src,Complex<T>* Dest,unsigned int Dimension,const FFTShuffleProvider* obj,bool Inverse,int Normalize){
 			//calc size
 			unsigned int N=1UL;
 			for(unsigned int d=0;d<Dimension;d++) N<<=obj[d].Shift;
@@ -310,10 +311,38 @@ namespace Myt{
 				BlockSizeShift+=obj[d].Shift;
 			}
 			//over
-			if(Normalize){
+			if(Normalize==1){
 				T_float f=T_float(1.0)/sqrt(T_float(N));
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
-			}else if(Inverse){
+			}else if(Inverse && Normalize==0){
+				T_float f=T_float(1.0)/T_float(N);
+				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
+			}
+		}
+		static void Calc2D(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj0,const FFTShuffleProvider& obj1,bool Inverse,int Normalize){
+			//calc size
+			unsigned int N=1UL<<(obj0.Shift+obj1.Shift);
+			//calc d=0
+			unsigned int Step=obj0.N,BlockSizeShift=obj0.Shift;
+			if(Src==Dest){
+				for(unsigned int i=0;i<N;i+=Step){
+					Shuffle(Dest+i,Step,obj0);
+					CalcInternal(Dest+i,Step,Inverse);
+				}
+			}else{
+				for(unsigned int i=0;i<N;i+=Step){
+					Shuffle(Src+i,Dest+i,Step,obj0);
+					CalcInternal(Dest+i,Step,Inverse);
+				}
+			}
+			//calc d=1
+			ShuffleEx(Dest,obj1.N,obj1,BlockSizeShift);
+			CalcInternalEx(Dest,obj1.N,Inverse,BlockSizeShift);
+			//over
+			if(Normalize==1){
+				T_float f=T_float(1.0)/sqrt(T_float(N));
+				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
+			}else if(Inverse && Normalize==0){
 				T_float f=T_float(1.0)/T_float(N);
 				for(unsigned int i=0;i<N;i++) Dest[i]*=f;
 			}
@@ -420,12 +449,12 @@ namespace Myt{
 			}
 		}
 	public:
-		//obj[Dimension-1] must be even
+		//obj[Dimension-1].N must be even
 		//real data size: obj[0].N * ... * (obj[Dimension-1].N*2)
 		//complex data size: obj[0].N * ... * (obj[Dimension-1].N+1)
 		//if Dimension>1 && Inverse==true then the output real data size should be
 		//as large as complex data, in order to hold temp data
-		static void CalcNDReal(const Complex<T>* Src,Complex<T>* Dest,unsigned int Dimension,const FFTShuffleProvider* obj,bool Inverse,bool Normalize){
+		static void CalcNDReal(const Complex<T>* Src,Complex<T>* Dest,unsigned int Dimension,const FFTShuffleProvider* obj,bool Inverse,int Normalize){
 			//calc size
 			unsigned int S0=0;
 			for(unsigned int d=0;d<Dimension-1;d++) S0+=obj[d].Shift;
@@ -474,10 +503,59 @@ namespace Myt{
 				if(Dimension>1) ShuffleNDRealInverseInplace(Dest,Dest+(N>>1),obj[Dimension-1].N,S0);
 			}
 			//over
-			if(Normalize){
+			if(Normalize==1){
 				T_float f=T_float(1.0)/sqrt(T_float(N));
 				for(unsigned int i=0;i<(Inverse?(N>>1):N1);i++) Dest[i]*=f;
-			}else if(Inverse){
+			}else if(Inverse && Normalize==0){
+				T_float f=T_float(1.0)/T_float(N);
+				for(unsigned int i=0;i<(N>>1);i++) Dest[i]*=f;
+			}
+		}
+		//obj1.N must be even
+		//real data size: obj0.N * (obj1.N*2)
+		//complex data size: obj0.N * (obj1.N+1)
+		//if Inverse==true then the output real data size should be
+		//as large as complex data, in order to hold temp data
+		static void Calc2DReal(const Complex<T>* Src,Complex<T>* Dest,const FFTShuffleProvider& obj0,const FFTShuffleProvider& obj1,bool Inverse,int Normalize){
+			//calc size
+			unsigned int S0=obj0.Shift;
+			unsigned int N=((1UL<<S0)<<obj1.Shift)<<1; //real data size
+			unsigned int N1=((1UL<<S0)<<obj1.Shift)+(1UL<<S0); //complex data size
+			//calc d=1 (forward)
+			if(!Inverse){
+				if(Src==Dest) ShuffleNDRealInplace(Dest,Dest+(N>>1),obj1.N,S0);
+				else ShuffleNDReal(Src,Dest,obj1.N,S0);
+
+				ShuffleEx(Dest,obj1.N,obj1,S0);
+				CalcInternalEx(Dest,obj1.N,Inverse,S0);
+				CalcRealPostProcessEx(Dest,obj1.N,S0);
+			}
+			//calc d=0
+			unsigned int Step=obj0.N;
+			if(Inverse && Src!=Dest){
+				for(unsigned int i=0;i<N1;i+=Step){
+					Shuffle(Src+i,Dest+i,Step,obj0);
+					CalcInternal(Dest+i,Step,Inverse);
+				}
+			}else{
+				for(unsigned int i=0;i<N1;i+=Step){
+					Shuffle(Dest+i,Step,obj0);
+					CalcInternal(Dest+i,Step,Inverse);
+				}
+			}
+			//calc d=1 (inverse)
+			if(Inverse){
+				CalcRealInversePreProcessEx(Dest,Dest,obj1.N,S0);
+				ShuffleEx(Dest,obj1.N,obj1,S0);
+				CalcInternalEx(Dest,obj1.N,Inverse,S0);
+				
+				ShuffleNDRealInverseInplace(Dest,Dest+(N>>1),obj1.N,S0);
+			}
+			//over
+			if(Normalize==1){
+				T_float f=T_float(1.0)/sqrt(T_float(N));
+				for(unsigned int i=0;i<(Inverse?(N>>1):N1);i++) Dest[i]*=f;
+			}else if(Inverse && Normalize==0){
 				T_float f=T_float(1.0)/T_float(N);
 				for(unsigned int i=0;i<(N>>1);i++) Dest[i]*=f;
 			}
@@ -485,8 +563,8 @@ namespace Myt{
 	private:
 		static void CalcRealPostProcessEx(Complex<T>* Dest,unsigned int N,unsigned int BlockSizeShift){
 			for(unsigned int idx=0;idx<(1UL<<BlockSizeShift);idx++){
-				Dest[(N<<BlockSizeShift)+idx]=Complex<T>::Make(Dest[idx].Re-Dest[idx].Im,Functions<T>::Zero());
-				Dest[idx]=Complex<T>::Make(Dest[idx].Re+Dest[idx].Im,Functions<T>::Zero());
+				Dest[(N<<BlockSizeShift)+idx]=Complex<T>::Make(Dest[idx].Re-Dest[idx].Im,Constants<T>::Zero());
+				Dest[idx]=Complex<T>::Make(Dest[idx].Re+Dest[idx].Im,Constants<T>::Zero());
 			}
 
 			const T_float pi=T_float(-3.14159265358979323846);
