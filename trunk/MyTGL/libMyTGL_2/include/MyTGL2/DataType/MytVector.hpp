@@ -147,14 +147,99 @@ namespace Myt{
 	};
 
 	template<class T_DataType,int N_Size>
-	struct Functions<Vector<T_DataType,N_Size> >{
+	struct Constants<Vector<T_DataType,N_Size> >{
 		static inline Vector<T_DataType,N_Size> Zero(){
 			Vector<T_DataType,N_Size> v={};
 			return v;
 		}
 		static inline Vector<T_DataType,N_Size> One(){
 			Vector<T_DataType,N_Size> v;
-			v=Functions<T_DataType>::One();
+			v=Constants<T_DataType>::One();
+			return v;
+		}
+	};
+
+	template<class T_DataType,int N_Size,class T_float>
+	struct LinearFunctions<Vector<T_DataType,N_Size>,T_float>{
+		static inline Vector<T_DataType,N_Size> Lerp(const Vector<T_DataType,N_Size>& Value1,const Vector<T_DataType,N_Size>& Value2,T_float f){
+			Vector<T_DataType,N_Size> v;
+			for(int i=0;i<N_Size;i++) v[i]=T_DataType(T_float(Value1[i])+(T_float(Value2[i])-T_float(Value1[i]))*f);
+			return v;
+		}
+	};
+
+	template<class T_DataType,int N_Size>
+	struct OrderFunctions<Vector<T_DataType,N_Size> >{
+		static inline Vector<T_DataType,N_Size> Max(const Vector<T_DataType,N_Size>& Value1,const Vector<T_DataType,N_Size>& Value2){
+			Vector<T_DataType,N_Size> v;
+			for(int i=0;i<N_Size;i++) v[i]=Value1[i]>Value2[i]?Value1[i]:Value2[i];
+			return v;
+		}
+		static inline Vector<T_DataType,N_Size> Min(const Vector<T_DataType,N_Size>& Value1,const Vector<T_DataType,N_Size>& Value2){
+			Vector<T_DataType,N_Size> v;
+			for(int i=0;i<N_Size;i++) v[i]=Value1[i]<Value2[i]?Value1[i]:Value2[i];
+			return v;
+		}
+		static inline Vector<T_DataType,N_Size> Clamp(const Vector<T_DataType,N_Size>& Value,const Vector<T_DataType,N_Size>& Min,const Vector<T_DataType,N_Size>& Max){
+			Vector<T_DataType,N_Size> v;
+			for(int i=0;i<N_Size;i++) v[i]=Value[i]<Min[i]?Min[i]:(Value[i]>Max[i]?Max[i]:Value[i]);
+			return v;
+		}
+
+		//Size should be >0
+		static inline Vector<T_DataType,N_Size> FindMax(const Vector<T_DataType,N_Size>* Array,unsigned int Size){
+			Vector<T_DataType,N_Size> t=Array[0];
+			for(unsigned int idx=1;idx<Size;idx++){
+				for(int i=0;i<N_Size;i++) if(Array[idx][i]>t[i]) t[i]=Array[idx][i];
+			}
+			return t;
+		}
+		//Size should be >0
+		static inline Vector<T_DataType,N_Size> FindMin(const Vector<T_DataType,N_Size>* Array,unsigned int Size){
+			Vector<T_DataType,N_Size> t=Array[0];
+			for(unsigned int idx=1;idx<Size;idx++){
+				for(int i=0;i<N_Size;i++) if(Array[idx][i]<t[i]) t[i]=Array[idx][i];
+			}
+			return t;
+		}
+		//Size should be >0
+		static inline void FindMinMax(const Vector<T_DataType,N_Size>* Array,Vector<T_DataType,N_Size>& Min,Vector<T_DataType,N_Size>& Max,unsigned int Size){
+			Min=Array[0];
+			Max=Array[0];
+			for(unsigned int idx=1;idx<Size;idx++){
+				for(int i=0;i<N_Size;i++){
+					if(Array[idx][i]<Min[i]) Min[i]=Array[idx][i];
+					else if(Array[idx][i]>Max[i]) Max[i]=Array[idx][i];
+				}
+			}
+		}
+	};
+
+	template<class T_DataType,int N_Size>
+	struct Random<Vector<T_DataType,N_Size> >{
+		template<class T_RndProvider>
+		static inline Vector<T_DataType,N_Size> Rnd(T_RndProvider &rnd){
+			if(sizeof(Vector<T_DataType,N_Size>)<=sizeof(unsigned long)){
+				unsigned long a=rnd.Rnd();
+				return (Vector<T_DataType,N_Size>&)a;
+			}else{
+				Vector<T_DataType,N_Size> v;
+				for(int i=0;i<N_Size;i++){
+					v[i]=Random<T_DataType>::Rnd(rnd);
+				}
+				return v;
+			}
+		}
+	};
+
+	template<int N_Size>
+	struct Random<Vector<float,N_Size> >{
+		template<class T_RndProvider>
+		static inline Vector<float,N_Size> Rnd(T_RndProvider &rnd){
+			Vector<float,N_Size> v;
+			for(int i=0;i<N_Size;i++){
+				v[i]=Random<float>::Rnd(rnd);
+			}
 			return v;
 		}
 	};
@@ -168,6 +253,11 @@ namespace Myt{
 	typedef Vector<float,2> Vector32FC2;
 	typedef Vector<float,3> Vector32FC3;
 	typedef Vector<float,4> Vector32FC4;
+
+	typedef Vector<double,1> Vector64FC1;
+	typedef Vector<double,2> Vector64FC2;
+	typedef Vector<double,3> Vector64FC3;
+	typedef Vector<double,4> Vector64FC4;
 }
 
 #endif

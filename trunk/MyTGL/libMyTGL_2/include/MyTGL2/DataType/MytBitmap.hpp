@@ -40,13 +40,29 @@ namespace Myt{
 		}
 
 		inline Bitmap<T_DataType>& operator=(const Bitmap<T_DataType>& obj){
-			if(ws+hs!=obj.ws+obj.hs){
-				AlignedFree(lp);
+			if(ws+hs!=obj.ws+obj.hs || lp==NULL){
+				if(lp) AlignedFree(lp);
 				lp=AlignedMalloc<T_DataType,16>(1<<(obj.ws+obj.hs));
 			}
 			ws=obj.ws;
 			hs=obj.hs;
 			memcpy(lp,obj.lp,sizeof(T_DataType)<<(ws+hs));
+		}
+
+		inline void Destroy(){
+			ws=0;
+			hs=0;
+			if(lp) AlignedFree(lp);
+			lp=NULL;
+		}
+
+		inline void Create(unsigned char WidthShift_,unsigned char HeightShift_){
+			if(ws+hs!=WidthShift_+HeightShift_ || lp==NULL){
+				if(lp) AlignedFree(lp);
+				lp=AlignedMalloc<T_DataType,16>(1<<(WidthShift_+HeightShift_));
+			}
+			ws=WidthShift_;
+			hs=HeightShift_;
 		}
 
 		~Bitmap(){

@@ -18,22 +18,22 @@ namespace Myt{
 		}
 
 		static inline Quaternion One(){
-			Quaternion c={Functions<T>::One()};
+			Quaternion c={Constants<T>::One()};
 			return c;
 		}
 
 		static inline Quaternion I(){
-			Quaternion c={Functions<T>::Zero(),Functions<T>::One()};
+			Quaternion c={Constants<T>::Zero(),Constants<T>::One()};
 			return c;
 		}
 
 		static inline Quaternion J(){
-			Quaternion c={Functions<T>::Zero(),Functions<T>::Zero(),Functions<T>::One()};
+			Quaternion c={Constants<T>::Zero(),Constants<T>::Zero(),Constants<T>::One()};
 			return c;
 		}
 
 		static inline Quaternion K(){
-			Quaternion c={Functions<T>::Zero(),Functions<T>::Zero(),Functions<T>::Zero(),Functions<T>::One()};
+			Quaternion c={Constants<T>::Zero(),Constants<T>::Zero(),Constants<T>::Zero(),Constants<T>::One()};
 			return c;
 		}
 
@@ -183,13 +183,22 @@ namespace Myt{
 	};
 
 	template<class T>
-	struct Functions<Quaternion<T> >{
+	struct Constants<Quaternion<T> >{
 		static inline Quaternion<T> Zero(){
 			Quaternion<T> c={};
 			return c;
 		}
 		static inline Quaternion<T> One(){
-			Quaternion<T> c={Functions<T>::One()};
+			Quaternion<T> c={Constants<T>::One()};
+			return c;
+		}
+	};
+
+	template<class T>
+	struct Random<Quaternion<T> >{
+		template<class T_RndProvider>
+		static inline Quaternion<T> Rnd(T_RndProvider &rnd){
+			Quaternion<T> c={Random<T>::Rnd(rnd),Random<T>::Rnd(rnd),Random<T>::Rnd(rnd),Random<T>::Rnd(rnd)};
 			return c;
 		}
 	};
