@@ -29,7 +29,7 @@ namespace Myt{
     class LCG{
 	private:
 		unsigned int X;
-		static const unsigned int Mask=((1UL<<(N_High-N_Low+1))-1);
+		static const unsigned int Mask=(unsigned int)((1ULL<<(N_High-N_Low+1))-1);
 	public:
 		void Init(unsigned int s){
 			X=s;
@@ -37,20 +37,6 @@ namespace Myt{
 		unsigned int Rnd(){
 			X=a*X+c;
 			return (X>>N_Low)&Mask;
-		}
-    };
-    template<int a,int c>
-    class LCG<a,c,31,0>{
-	private:
-		unsigned int X;
-		static const unsigned int Mask=0xFFFFFFFFUL;
-	public:
-		void Init(unsigned int s){
-			X=s;
-		}
-		unsigned int Rnd(){
-			X=a*X+c;
-			return X;
 		}
     };
 }

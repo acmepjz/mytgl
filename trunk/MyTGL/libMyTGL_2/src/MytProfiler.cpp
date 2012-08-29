@@ -34,8 +34,8 @@ struct CPUUsageInternalData{
 
 #endif
 
-static Myt::StaticAssert<sizeof(TimingInternalData)<=sizeof(Myt::Timing)-1> dummy1;
-static Myt::StaticAssert<sizeof(CPUUsageInternalData)<=sizeof(Myt::CPUUsage)> dummy2;
+static const Myt::StaticAssert<sizeof(TimingInternalData)<=sizeof(Myt::Timing)-1> dummy1;
+static const Myt::StaticAssert<sizeof(CPUUsageInternalData)<=sizeof(Myt::CPUUsage)> dummy2;
 
 namespace Myt{
 	Timing::Timing(){

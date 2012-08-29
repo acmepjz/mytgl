@@ -68,6 +68,15 @@ namespace Myt{
 		}
 	};
 
+	template<class T>
+	struct LinearOrderFunctions{
+		static int QSortCompareFunction(const void* lp1_,const void* lp2_){
+			const T& lp1=*(const T*)lp1_;
+			const T& lp2=*(const T*)lp2_;
+			return lp1<lp2?-1:(lp1>lp2?1:0);
+		}
+	};
+
 	template<>
 	struct Random<float>{
 		template<class T_RndProvider>
@@ -82,6 +91,38 @@ namespace Myt{
 		static inline double Rnd(T_RndProvider &rnd){
 			unsigned long a=rnd.Rnd()>>5, b=rnd.Rnd()>>6; 
 			return(a*67108864.0+b)*(1.0/9007199254740992.0); 
+		}
+	};
+
+	class IRandom{
+	public:
+		virtual unsigned int Rnd()=0; 
+	};
+	template<class T_RndProvider>
+	class IRandomImpl:public IRandom,public T_RndProvider{
+	public:
+		virtual unsigned int Rnd(){
+			return static_cast<T_RndProvider*>(this)->Rnd();
+		}
+	};
+
+	class INoise{
+	public:
+		virtual int Noise1(int x,int Seed)=0;
+		virtual int Noise2(int x,int y,int Seed)=0;
+		virtual int Noise3(int x,int y,int z,int Seed)=0;
+	};
+	template<class T_NoiseProvider>
+	class INoiseImpl:public INoise,public T_NoiseProvider{
+	public:
+		virtual int Noise1(int x,int Seed){
+			return static_cast<T_NoiseProvider*>(this)->Noise1(x,Seed);
+		}
+		virtual int Noise2(int x,int y,int Seed){
+			return static_cast<T_NoiseProvider*>(this)->Noise2(x,y,Seed);
+		}
+		virtual int Noise3(int x,int y,int z,int Seed){
+			return static_cast<T_NoiseProvider*>(this)->Noise3(x,y,z,Seed);
 		}
 	};
 }

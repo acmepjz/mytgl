@@ -3,6 +3,7 @@
 
 #include "MyTGL2/Util/MytMemoryManagement.hpp"
 #include "MyTGL2/DataType/MytVector.hpp"
+#include <string.h>
 
 namespace Myt{
 	template<class T_DataType>
@@ -66,7 +67,7 @@ namespace Myt{
 		}
 
 		~Bitmap(){
-			AlignedFree(lp);
+			if(lp) AlignedFree(lp);
 		}
 
 		//IBitmap must implement
