@@ -25,7 +25,8 @@ namespace Myt{
 		fwrite(bm.Pointer(),1,Size,f);
 		return true;
 	}
-	inline bool SaveBmp(const Bitmap8UC4& bm,const char* fn){
+	template <class T_Bmp>
+	inline bool SaveBmp(const T_Bmp& bm,const char* fn){
 		FILE *f=fopen(fn,"wb");
 		bool b=false;
 		if(f){
